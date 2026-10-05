@@ -1,0 +1,32 @@
+# Tree of Life Phase 1 Mathematical Fusion Configuration
+# NOTE: Thresholds here are starting heuristic baselines.
+# Calibrate on validation data before production deployment (spec-06).
+
+fusion_weights:
+  visual: 0.70
+  genomic: 0.15
+  phenotype: 0.10
+  environment: 0.05
+
+# Variety confidence penalty (multiplied by genomic weight if confidence in 0.60–0.85)
+GENOMIC_VARIETY_CONF_PENALTY: 0.50
+
+# Thresholds for triggering Qwen under uncertain_only policy
+VISUAL_UNCERTAIN_THRESHOLD: 0.80
+DISAGREEMENT_THRESHOLD: 0.15
+OOD_THRESHOLD: 0.30
+
+# Visual guard conditions: if visual prob >= 0.95 and quality >= 0.70, visual top class cannot be flipped
+VISUAL_GUARD_PROB: 0.95
+VISUAL_GUARD_QUALITY: 0.70
+
+# Quality gate threshold: below this aggregate score, return status="recapture_required"
+QUALITY_MIN: 0.60
+
+# Routing probability thresholds
+ROUTING_HIGH_PROB: 0.80
+ROUTING_MODERATE_PROB: 0.60
+ROUTING_LOW_QUALITY: 0.50
+
+# Epsilon clamp to prevent division by zero or log(0)
+EPSILON: 1.0e-8

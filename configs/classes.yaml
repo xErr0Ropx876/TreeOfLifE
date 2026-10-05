@@ -1,0 +1,44 @@
+# Target Classes and Disease Family Mappings for Tree of Life Phase 1
+classes:
+  - id: "healthy"
+    name: "Healthy"
+    family: "none"
+    is_disease: false
+  - id: "rice_blast"
+    name: "Rice Blast (Magnaporthe oryzae)"
+    family: "fungal"
+    is_disease: true
+  - id: "rice_brown_spot"
+    name: "Brown Spot (Bipolaris oryzae)"
+    family: "fungal"
+    is_disease: true
+  - id: "bacterial_leaf_blight"
+    name: "Bacterial Leaf Blight (Xanthomonas oryzae pv. oryzae)"
+    family: "bacterial"
+    is_disease: true
+  - id: "rice_leaf_scald"
+    name: "Leaf Scald (Microdochium oryzae)"
+    family: "fungal"
+    is_disease: true
+  - id: "rice_tungro"
+    name: "Rice Tungro Disease (RTBV & RTSV)"
+    family: "viral"
+    is_disease: true
+  - id: "unknown_or_ood"
+    name: "Unknown or Out of Distribution"
+    family: "none"
+    is_disease: false
+
+class_to_family:
+  rice_blast: "fungal"
+  rice_brown_spot: "fungal"
+  bacterial_leaf_blight: "bacterial"
+  rice_leaf_scald: "fungal"
+  rice_tungro: "viral"
+
+disease_class_ids:
+  - "rice_blast"
+  - "rice_brown_spot"
+  - "bacterial_leaf_blight"
+  - "rice_leaf_scald"
+  - "rice_tungro"

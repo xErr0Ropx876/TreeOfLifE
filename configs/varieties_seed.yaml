@@ -1,0 +1,121 @@
+# Canonical Karnataka Rice Varieties and Curated Susceptibility Priors
+# Note: Susceptibility values (0.0 to 1.0) are variety-level curated estimates from agronomic literature.
+# Every genomic record carries the disclaimer:
+# "This is a variety-level genomic susceptibility estimate and is not DNA sequencing of this plant."
+
+varieties:
+  - canonical_id: "IR64"
+    canonical_name: "IR 64"
+    aliases:
+      - "IR64"
+      - "IR-64"
+      - "IR 64"
+      - "I.R. 64"
+    region: "Karnataka"
+    duration_days: 120
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.65
+      rice_brown_spot: 0.45
+      bacterial_leaf_blight: 0.70
+      rice_leaf_scald: 0.35
+      rice_tungro: 0.50
+
+  - canonical_id: "BPT_5204"
+    canonical_name: "BPT-5204 (Sona Masuri)"
+    aliases:
+      - "BPT 5204"
+      - "BPT-5204"
+      - "BPT5204"
+      - "Sona Masuri"
+      - "Samba Mahsuri"
+      - "Sona Masoori"
+    region: "Karnataka"
+    duration_days: 145
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.75
+      rice_brown_spot: 0.40
+      bacterial_leaf_blight: 0.85
+      rice_leaf_scald: 0.30
+      rice_tungro: 0.40
+
+  - canonical_id: "SWARNA_MTU_7029"
+    canonical_name: "Swarna (MTU-7029)"
+    aliases:
+      - "Swarna"
+      - "MTU 7029"
+      - "MTU-7029"
+      - "MTU7029"
+    region: "Karnataka"
+    duration_days: 150
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.55
+      rice_brown_spot: 0.50
+      bacterial_leaf_blight: 0.80
+      rice_leaf_scald: 0.40
+      rice_tungro: 0.60
+
+  - canonical_id: "MTU_1010"
+    canonical_name: "MTU-1010 (Cottondora Sannalu)"
+    aliases:
+      - "MTU 1010"
+      - "MTU-1010"
+      - "MTU1010"
+      - "Cottondora Sannalu"
+    region: "Karnataka"
+    duration_days: 120
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.70
+      rice_brown_spot: 0.35
+      bacterial_leaf_blight: 0.65
+      rice_leaf_scald: 0.30
+      rice_tungro: 0.45
+
+  - canonical_id: "RNR_15048"
+    canonical_name: "RNR-15048 (Telangana Sona)"
+    aliases:
+      - "RNR 15048"
+      - "RNR-15048"
+      - "RNR15048"
+      - "Telangana Sona"
+    region: "Karnataka"
+    duration_days: 125
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.35
+      rice_brown_spot: 0.30
+      bacterial_leaf_blight: 0.40
+      rice_leaf_scald: 0.25
+      rice_tungro: 0.30
+
+  - canonical_id: "PUSA_BASMATI_1121"
+    canonical_name: "Pusa Basmati 1121"
+    aliases:
+      - "Pusa 1121"
+      - "Pusa Basmati 1121"
+      - "PB 1121"
+      - "1121 Basmati"
+    region: "Karnataka"
+    duration_days: 140
+    is_placeholder: true
+    source_database: "local_curated"
+    source_version: "2024.1"
+    susceptibility:
+      rice_blast: 0.80
+      rice_brown_spot: 0.55
+      bacterial_leaf_blight: 0.75
+      rice_leaf_scald: 0.45
+      rice_tungro: 0.50

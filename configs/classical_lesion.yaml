@@ -1,0 +1,20 @@
+# Classical Computer Vision Lesion Localization Configuration
+# HSV Thresholds for green leaf segmentation and lesion extraction
+
+leaf_mask:
+  hue_min: 35
+  hue_max: 85
+  saturation_min: 0.20
+  value_min: 0.20
+
+lesion_candidates:
+  hue_min: 10
+  hue_max: 40
+  saturation_min: 0.30
+  value_min: 0.15
+
+morphology:
+  kernel_size: 5
+  min_contour_area: 50
+  max_detections: 5
+  box_padding_pct: 0.15

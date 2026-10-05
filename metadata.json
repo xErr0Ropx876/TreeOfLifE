@@ -1,0 +1,8 @@
+{
+  "name": "Tree of Life - Rice Disease Decision Support",
+  "description": "Local, multi-modal crop disease decision support system for Indian smallholder farmers integrating visual phenotype, variety-level genomic priors, and environmental risk.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
