@@ -7,7 +7,7 @@ Where any code sketch conflicts with this table or requirements.md, the table wi
 
 | Decision | Details |
 |----------|---------|
-| **LoadableService** | One sync `load()`/`unload()` for all models (Visual, Localizer, Phenotype). No `LoadableService`. Orchestrator wraps in `to_thread`. |
+| **LoadableService** | One async `load()`/`unload()` for all models (Visual, Localizer, Phenotype). No `AsyncLoadable`. Orchestrator wraps the inference calls in `to_thread`. |
 | **Pipeline Order** | Quality -> Visual(Full) -> Localizer(Detect+OCR in one load, classical fallback) -> Crops -> Visual(Crops) -> store partial -> Qwen(policy) -> Variety(no visual_guess) -> Genomic -> Env -> Fusion -> Routing -> Response. |
 | **GPU Management** | Single `GpuLock`. No top-level `import torch` in orchestrator. `unload()` uses lazy-torch helper for `gc.collect()` and `torch.cuda.empty_cache()`. `try/finally` around every unload. |
 | **Queuing** | `asyncio.Queue(maxsize)` with one worker loop. Orphaned "processing" jobs marked failed at startup. |
@@ -203,7 +203,7 @@ app/
 │   ├── config.py              # Pydantic settings from .env
 │   ├── logging.py             # Structured logging (no PII)
 │   ├── errors.py              # Typed error hierarchy
-│   ├── gpu.py                 # GPU_Lock (single instance), VRAM monitoring
+│   ├── gpu.py                 # VRAM monitoring helpers
 │   ├── security.py            # EXIF stripping, magic byte validation
 │   └── rate_limit.py          # IP-based rate limiting
 ├── api/v1/                    # REST endpoints
@@ -273,7 +273,7 @@ app/
 ├── pipeline/                  # Orchestration
 │   ├── orchestrator.py        # Main pipeline controller (sync models on executor)
 │   ├── queue.py               # Bounded async job queue
-│   ├── gpu_lock.py            # Async-safe GPU serialization (single instance)
+│   ├── gpu_lock.py            # Async-safe GPU serialization (single instance, canonical)
 │   ├── storage.py             # Temporary file management
 │   └── janitor.py             # Background retention cleanup (files before DB rows)
 ├── workers/                   # Future: separate worker processes
@@ -296,12 +296,12 @@ from abc import abstractmethod
 
 class LoadableService(Protocol):
     """Services that require initialization/cleanup on dedicated executor."""
-    def load(self) -> None:
-        """Load resources (models, connections) synchronously on executor thread."""
+    async def load(self) -> None:
+        """Load resources (models, connections) asynchronously."""
         ...
     
-    def unload(self) -> None:
-        """Release resources and clear caches synchronously on executor thread."""
+    async def unload(self) -> None:
+        """Release resources and clear caches asynchronously."""
         ...
 
 class VisualClassifierProtocol(LoadableService, Protocol):
@@ -406,8 +406,8 @@ class EfficientNetClassifier:
         self.device: str = "cuda" if torch.cuda.is_available() else "cpu"
         self.calibration_params: CalibrationParams | None = None
     
-    def load(self) -> None:
-        """Synchronous load on executor thread."""
+    async def load(self) -> None:
+        """Asynchronous load."""
         # Load EfficientNet-B0 with ImageNet backbone
         # Replace final layer with 7-class head
         # Load trained checkpoint from registry
@@ -416,10 +416,15 @@ class EfficientNetClassifier:
         # Log VRAM usage
         # NO async/await - this is synchronous
     
-    def classify_images(
+    def classify_full(
         self,
-        images: list[np.ndarray],
-        candidate_regions: list[list[LesionDetection]] | None = None
+        images: list[np.ndarray]
+    ) -> list[VisualPrediction]:
+        ...
+
+    def classify_crops(
+        self,
+        crops: list[np.ndarray]
     ) -> list[VisualPrediction]:
         """
         Synchronous inference on executor thread.
@@ -439,8 +444,8 @@ class EfficientNetClassifier:
         NO torch.cuda.empty_cache() here - done in orchestrator unload
         """
     
-    def unload(self) -> None:
-        """Synchronous unload on executor thread."""
+    async def unload(self) -> None:
+        """Asynchronous unload."""
         # del self.model
         # DO NOT call gc.collect() or torch.cuda.empty_cache() here
         # Orchestrator handles cleanup
@@ -543,8 +548,8 @@ def compute_js_divergence(p: np.ndarray, q: np.ndarray) -> float:
     kl_qm = np.sum(q * np.log2(q / m + 1e-10))
     jsd = 0.5 * kl_pm + 0.5 * kl_qm
     # JSD is in [0, 1] for base-2 log with binary distributions
-    # For 7 classes, normalize by log2(7) to get [0,1]
-    return np.clip(jsd / np.log2(7), 0.0, 1.0)
+    # JSD is in [0, 1] natively for base-2 log
+    return np.clip(jsd, 0.0, 1.0)
 ```
 
 #### 4. Phenotype_Extractor (app/services/phenotype/)
@@ -557,11 +562,11 @@ class PhenotypeExtractorProtocol(LoadableService, Protocol):
         ...
 
 class QwenPhenotypeExtractor(PhenotypeExtractorProtocol):
-    def load(self) -> None:
-        # Sync load 4-bit NF4
+    async def load(self) -> None:
+        # Async load 4-bit NF4
         pass
         
-    def unload(self) -> None:
+    async def unload(self) -> None:
         # Sync unload + clear cache
         pass
         
@@ -1071,7 +1076,7 @@ class Orchestrator:
             return self._build_recapture_response(quality_result)
         
         # Stage 2: Visual full images (GPU)
-        async with self.gpu_lock:
+        async with self.gpu_lock.acquire("ModelName"):
             try:
                 await self.visual.load()
                 visual_full = await asyncio.to_thread(
@@ -1092,7 +1097,7 @@ class Orchestrator:
                 await self.visual.unload()
         
         # Stage 3: Lesion localization + OCR (GPU)
-        async with self.gpu_lock:
+        async with self.gpu_lock.acquire("ModelName"):
             try:
                 await self.localizer.load()
                 detections = await asyncio.to_thread(
@@ -1118,7 +1123,7 @@ class Orchestrator:
         
         # Stage 5: Visual crops (GPU)
         if crops:
-            async with self.gpu_lock:
+            async with self.gpu_lock.acquire("ModelName"):
                 await self.visual.load()
                 visual_crops = await asyncio.to_thread(
                     self.visual.classify_image,
@@ -1134,7 +1139,7 @@ class Orchestrator:
         # Stage 7: Phenotype extraction (GPU, conditional)
         phenotype_result = None
         if self._should_run_qwen(visual_full, self.config.QWEN_POLICY):
-            async with self.gpu_lock:
+            async with self.gpu_lock.acquire("ModelName"):
                 try:
                     await self.phenotype.load()
                     phenotype_result = await asyncio.to_thread(
@@ -3286,7 +3291,7 @@ branch_weights:
   visual: 0.70
   genomic: 0.15
   phenotype: 0.10
-  environment: 0.1
+  environment: 0.05
 
 # Variety confidence penalty for genomic
 genomic_variety_conf_penalty: 0.5
@@ -4015,7 +4020,7 @@ def test_anchored_visual_weight(
 
 # Feature: phase1-foundation, Property 13: Visual guard override
 @given(
-    visual_top_prob=st.floats(min_value=0.9, max_value=1.0),
+    visual_top_prob=st.floats(min_value=0.95, max_value=1.0),
     quality_score=st.floats(min_value=0.70, max_value=1.0),
     genomic_suggests_different=st.booleans()
 )

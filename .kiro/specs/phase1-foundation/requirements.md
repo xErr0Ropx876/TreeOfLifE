@@ -220,7 +220,7 @@ Tree of Life is a local, open-source crop-disease decision-support backend for I
 
 5.8. IF variety confidence is below 0.60, THEN THE Variety_Resolver SHALL set variety to unknown
 
-5.9. WHEN variety source is visual_guess, THE Variety_Resolver SHALL cap confidence at 0.40
+5.9. WHEN variety source is , THE Variety_Resolver SHALL cap confidence at 0.40
 
 5.10. THE Variety_Resolver SHALL check consistency between resolved crop and user-provided crop parameter
 
